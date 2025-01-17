@@ -1,8 +1,7 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import pytesseract
 import pyautogui
-import threading
 import requests
 import cohere
 import os
@@ -13,22 +12,18 @@ import cv2
 import numpy as np
 from PIL import ImageGrab, Image
 
-def detect_language(text):
-    try:
-        return detect(text)
-    except Exception as e:
-        return "eng"
 
+# OCR-related functions
 def capture_screen(lang="eng"):
     try:
         # Capture the screen
-        screen = ImageGrab.grab()  # Take a screenshot
-        screen_np = np.array(screen)  # Convert to a NumPy array
+        screen = ImageGrab.grab()
+        screen_np = np.array(screen)
 
         # Convert to grayscale
         gray = cv2.cvtColor(screen_np, cv2.COLOR_BGR2GRAY)
 
-        # Apply adaptive thresholding for dynamic contrast enhancement
+        # Apply adaptive thresholding
         thresh = cv2.adaptiveThreshold(
             gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
         )
@@ -38,67 +33,35 @@ def capture_screen(lang="eng"):
 
         # Save processed image for debugging
         processed_image.save("processed_screenshot.png")
-        print("Debug Image Saved: processed_screenshot.png")
+        print("Debug: Processed screenshot saved as 'processed_screenshot.png'.")
 
-        # Run OCR on the processed image
+        # Run OCR
         text = pytesseract.image_to_string(processed_image, lang=lang)
         return text
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to capture screen: {e}")
+        print(f"Error capturing screen: {e}")
         return None
 
 
-
-def generate_response(prompt):
-    try:
-        api_key = os.getenv("COHERE_API_KEY")
-        co = cohere.Client(api_key)  # Use the environment variable
-
-        # Update the prompt to include clear instructions
-        instruction_prompt = (
-            "Answer the following question clearly and concisely. "
-            "Do not repeat the question.\n\n"
-            f"Question: {prompt}\n"
-            "Answer:"
-        )
-
-        response = co.generate(
-            model="command-xlarge-nightly",
-            prompt=instruction_prompt,
-            max_tokens=100,  # Adjust as needed
-        )
-        return response.generations[0].text.strip()
-    except Exception as e:
-        print(f"Error generating response: {e}")
-        return "Failed to get a response."
-
-
-def clean_response(response, original_prompt):
-    # Remove parts of the response that repeat the original prompt
-    response = response.replace(original_prompt, "").strip()
-
-    # Optionally, strip common prefixes like "Question:" or "Answer:"
-    response = response.replace("Question:", "").replace("Answer:", "").strip()
-
-    return response
-
+# Clean OCR text
 def clean_ocr_output(text):
-    # Remove non-alphanumeric characters except for spaces and punctuation
+    print(f"Debug: Raw OCR Output: {text}")  # Debugging: Raw OCR output
     cleaned_text = re.sub(r"[^a-zA-Z0-9\s\?\.,]", "", text)
-
-    # Replace common OCR errors with corrections
     corrections = {
         "thie": "third",
         "wes": "was",
         "presitient": "president",
         "Ge": "the",
-        "united sketas": "United States"
+        "united sketas": "United States",
     }
     for error, correction in corrections.items():
         cleaned_text = cleaned_text.replace(error, correction)
 
+    print(f"Debug: Cleaned OCR Output: {cleaned_text}")  # Debugging: Cleaned OCR output
     return cleaned_text.strip()
 
+
+# Normalize text
 def normalize_text(text):
     spell = SpellChecker()
     words = text.split()
@@ -106,107 +69,127 @@ def normalize_text(text):
     return " ".join(corrected_words)
 
 
+# Generate response using Cohere
+def generate_response(prompt):
+    try:
+        api_key = os.getenv("COHERE_API_KEY")
+        co = cohere.Client(api_key)
+        instruction_prompt = (
+            "Answer the following question clearly and concisely. "
+            "Do not repeat the question.\n\n"
+            f"Question: {prompt}\n"
+            "Answer:"
+        )
+        response = co.generate(
+            model="command-xlarge-nightly",
+            prompt=instruction_prompt,
+            max_tokens=100,
+        )
+        return response.generations[0].text.strip()
+    except Exception as e:
+        print(f"Error generating response: {e}")
+        return "Failed to get a response."
+
+
+# Clean the AI response
+def clean_response(response, original_prompt):
+    response = response.replace(original_prompt, "").strip()
+    response = response.replace("Question:", "").replace("Answer:", "").strip()
+    return response
+
+
+# Detect and focus on text box
 def detect_and_focus_text_box():
     try:
-        # Capture the screen
         screen = ImageGrab.grab()
         gray_screen = screen.convert("L")
-
-        # Run OCR and get bounding box data
         data = pytesseract.image_to_data(gray_screen, output_type=pytesseract.Output.DICT)
-
-        # Look for placeholder text or keywords
         keywords = ["Type a message", "Write something", "Enter message"]
         for i, text in enumerate(data["text"]):
             if any(keyword.lower() in text.lower() for keyword in keywords):
-                # Get bounding box coordinates
                 x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
-                print(f"Detected text box at: x={x}, y={y}, width={w}, height={h}")  # Debugging
-
-                # Move the mouse to the center of the detected box
+                print(f"Debug: Detected text box at x={x}, y={y}, w={w}, h={h}.")
                 pyautogui.moveTo(x + w // 2, y + h // 2, duration=0.5)
                 pyautogui.click()
                 return True
-
-        # If no matching text box is found, use fallback coordinates
         fallback_click()
         return False
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to detect text box: {e}")
+        print(f"Error detecting text box: {e}")
         return False
 
 
+# Fallback for text box focus
 def fallback_click():
-    print("Fallback: Clicking predefined text box coordinates...")
-    pyautogui.moveTo(500, 800, duration=0.5)  # Adjust these coordinates for your setup
+    print("Debug: Using fallback click.")
+    pyautogui.moveTo(500, 800, duration=0.5)
     pyautogui.click()
 
 
+# Automate typing
 def type_response(response):
     try:
         if not detect_and_focus_text_box():
-            pyautogui.moveTo(500, 800)  # Example fallback coordinates
-            pyautogui.click()
+            fallback_click()
+        print(f"Debug: Typing response: {response}")  # Debugging: Typing response
         pyautogui.typewrite(response, interval=0.1)
         pyautogui.press("enter")
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to type response: {e}")
+        print(f"Error typing response: {e}")
 
+
+# Process chat without interruptions
 def process_chat():
     text = capture_screen(lang="eng")
     if not text:
-        messagebox.showerror("Error", "No text detected on the screen.")
+        print("Debug: No text detected on the screen.")
         return
 
-    print("OCR Output (Raw):", text)  # Debugging: Raw OCR output
+    # Log raw OCR output
+    print("Debug: OCR Output (Raw):", text)
 
     # Clean and normalize the OCR text
     text = clean_ocr_output(text)
-    print("OCR Output (Cleaned):", text)  # Debugging: Cleaned OCR output
+    print("Debug: OCR Output (Cleaned):", text)
 
-    # Detect the last question from the OCR output
+    # Detect the last question
     last_question = None
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     for line in reversed(lines):
-        if "?" in line:  # Detect questions
+        if "?" in line:
             last_question = line
             break
 
     if not last_question:
-        messagebox.showinfo("Info", "No question detected on the screen.")
+        print("Debug: No question detected.")
         return
 
-    # Normalize the detected question
+    print(f"Debug: Detected question (Before Normalization): {last_question}")
     last_question = normalize_text(last_question)
-
-    print(f"Detected question: {last_question}")  # Debugging
+    print(f"Debug: Detected question (After Normalization): {last_question}")
 
     # Generate AI response
     ai_response = generate_response(last_question)
 
-    # Clean the AI response to remove any repeated question
+    # Clean the AI response
     ai_response = clean_response(ai_response, last_question)
+    print(f"Debug: AI Response: {ai_response}")
 
-    # Show the response
-    if ai_response:
-        messagebox.showinfo("AI Response", ai_response)
-        if messagebox.askyesno("Type Response", "Do you want to type this response automatically?"):
-            type_response(ai_response)
+    # Type the AI response automatically
+    type_response(ai_response)
 
+
+# GUI
 def main():
     root = tk.Tk()
     root.title("LOOK SMART AI")
-    bg_color, fg_color = "#282c34", "white"
-    button_bg, button_fg, exit_bg = "#007acc", "white", "#cc0000"
-
-    style = ttk.Style()
-    style.configure("TButton", background=button_bg, foreground=button_fg)
+    root.geometry("300x200")
 
     ttk.Button(root, text="Process Chat", command=process_chat).pack(pady=10)
     ttk.Button(root, text="Exit", command=root.quit).pack(pady=10)
 
-    root.geometry("300x200")
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
