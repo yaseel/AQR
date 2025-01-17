@@ -106,19 +106,39 @@ def normalize_text(text):
 
 def detect_and_focus_text_box():
     try:
+        # Capture the screen
         screen = ImageGrab.grab()
         gray_screen = screen.convert("L")
+
+        # Run OCR and get bounding box data
         data = pytesseract.image_to_data(gray_screen, output_type=pytesseract.Output.DICT)
+
+        # Look for placeholder text or keywords
         keywords = ["Type a message", "Write something", "Enter message"]
         for i, text in enumerate(data["text"]):
             if any(keyword.lower() in text.lower() for keyword in keywords):
+                # Get bounding box coordinates
                 x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
+                print(f"Detected text box at: x={x}, y={y}, width={w}, height={h}")  # Debugging
+
+                # Move the mouse to the center of the detected box
                 pyautogui.moveTo(x + w // 2, y + h // 2, duration=0.5)
                 pyautogui.click()
                 return True
+
+        # If no matching text box is found, use fallback coordinates
+        fallback_click()
         return False
-    except Exception:
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to detect text box: {e}")
         return False
+
+
+def fallback_click():
+    print("Fallback: Clicking predefined text box coordinates...")
+    pyautogui.moveTo(500, 800, duration=0.5)  # Adjust these coordinates for your setup
+    pyautogui.click()
+
 
 def type_response(response):
     try:
