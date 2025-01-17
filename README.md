@@ -17,7 +17,7 @@ Click "Process Chat" to capture the screen and analyze questions.
 The AI response will be displayed and optionally typed into the selected text box.
 
 ## Setup Instructions For Users (Windows)
-[Download the Executable](https://github.com/<your-username>/<your-repo>/raw/main/dist/gui_app.exe)
+[Download the Executable](https://github.com/yaseel/AQR/raw/main/dist/gui_app.exe)
 
 Run the Executable:
 Simply double-click the .exe file to launch the application.
