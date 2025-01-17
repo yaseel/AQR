@@ -5,6 +5,7 @@ import pyautogui
 import threading
 import requests
 import cohere
+import os
 import time
 import re
 from spellchecker import SpellChecker
@@ -50,7 +51,8 @@ def capture_screen(lang="eng"):
 
 def generate_response(prompt):
     try:
-        co = cohere.Client("REDACTED")  # Replace with your actual API key
+        api_key = os.getenv("COHERE_API_KEY")
+        co = cohere.Client(api_key)  # Use the environment variable
 
         # Update the prompt to include clear instructions
         instruction_prompt = (
