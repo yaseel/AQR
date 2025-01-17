@@ -1,0 +1,82 @@
+2025-01-17 21:24:20,478 - INFO - Starting screen capture...
+2025-01-17 21:24:20,520 - DEBUG - Screen captured successfully.
+2025-01-17 21:24:20,530 - DEBUG - Screen converted to NumPy array.
+2025-01-17 21:24:20,540 - DEBUG - Converted image to grayscale.
+2025-01-17 21:24:20,542 - DEBUG - Applied morphological transformations.
+2025-01-17 21:24:20,546 - DEBUG - Applied CLAHE for better contrast.
+2025-01-17 21:24:20,590 - INFO - Processed screenshot saved as 'enhanced_debug.png'.
+2025-01-17 21:24:20,628 - DEBUG - ['C:\\Users\\Aseel\\AppData\\Local\\Temp\\_MEI123282\\tesseract.exe', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_jajwl1j6_input.PNG', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_jajwl1j6', '-l', 'eng', '--oem', '3', '--psm', '6', 'txt']
+2025-01-17 21:24:20,831 - ERROR - Error capturing screen: (1, 'Error opening data file /home/debian/src/github/tesseract-ocr/tesseract/bin/ndebug/x86_64-w64-mingw32-5.5.0.20241111/mingw64/share/tessdata/eng.traineddata Please make sure the TESSDATA_PREFIX environment variable is set to your "tessdata" directory. Failed loading language \'eng\' Tesseract couldn\'t load any languages! Could not initialize tesseract.')
+2025-01-17 21:34:06,569 - WARNING - EasyOCR not installed. Defaulting to Tesseract.
+2025-01-17 21:34:12,706 - INFO - Starting screen capture...
+2025-01-17 21:34:12,820 - INFO - Processed screenshot saved as 'enhanced_debug.png'.
+2025-01-17 21:34:12,855 - DEBUG - ['C:\\Users\\Aseel\\AppData\\Local\\Temp\\_MEI126762\\tesseract.exe', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_99gjmd8c_input.PNG', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_99gjmd8c', '-l', 'eng', '--oem', '3', '--psm', '6', 'txt']
+2025-01-17 21:34:13,059 - ERROR - Tesseract OCR failed: (1, 'Error opening data file C:\\Users\\Aseel\\AppData\\Local\\Temp\\_MEI126762/eng.traineddata Please make sure the TESSDATA_PREFIX environment variable is set to your "tessdata" directory. Failed loading language \'eng\' Tesseract couldn\'t load any languages! Could not initialize tesseract.')
+2025-01-17 21:34:13,061 - WARNING - EasyOCR not enabled.
+2025-01-17 21:39:18,663 - WARNING - EasyOCR not installed. Defaulting to Tesseract.
+2025-01-17 21:39:21,863 - INFO - Starting screen capture...
+2025-01-17 21:39:21,964 - INFO - Processed screenshot saved as 'enhanced_debug.png'.
+2025-01-17 21:39:21,997 - DEBUG - ['C:\\Users\\Aseel\\AppData\\Local\\Temp\\_MEI18362\\tesseract.exe', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_ljm00qm2_input.PNG', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_ljm00qm2', '-l', 'eng', '--oem', '3', '--psm', '6', 'txt']
+2025-01-17 21:39:22,003 - ERROR - Tesseract OCR failed: C:\Users\Aseel\AppData\Local\Temp\_MEI18362\tesseract.exe is not installed or it's not in your PATH. See README file for more information.
+2025-01-17 21:39:22,005 - WARNING - EasyOCR not enabled.
+2025-01-17 21:43:09,385 - WARNING - EasyOCR not installed. Defaulting to Tesseract.
+2025-01-17 21:43:12,089 - INFO - Starting screen capture...
+2025-01-17 21:43:12,197 - INFO - Processed screenshot saved as 'enhanced_debug.png'.
+2025-01-17 21:43:12,230 - DEBUG - ['C:\\Users\\Aseel\\AppData\\Local\\Temp\\_MEI128722\\tesseract.exe', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_x9ha49s7_input.PNG', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_x9ha49s7', '-l', 'eng', '--oem', '3', '--psm', '6', 'txt']
+2025-01-17 21:43:12,236 - ERROR - Tesseract OCR failed: C:\Users\Aseel\AppData\Local\Temp\_MEI128722\tesseract.exe is not installed or it's not in your PATH. See README file for more information.
+2025-01-17 21:43:12,238 - WARNING - EasyOCR not enabled.
+2025-01-17 21:52:14,029 - INFO - Starting screen capture...
+2025-01-17 21:52:14,164 - INFO - Processed screenshot saved as 'enhanced_debug.png'.
+2025-01-17 21:52:14,197 - DEBUG - ['C:\\Users\\Aseel\\AppData\\Local\\Temp\\_MEI105162\\tesseract.exe', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_uaz0xe49_input.PNG', 'C:\\Users\\Aseel\\AppData\\Local\\Temp\\tess_uaz0xe49', '-l', 'eng', '--oem', '3', '--psm', '6', 'txt']
+2025-01-17 21:52:15,230 - DEBUG - OCR Text (Tesseract): ¥ lessee. a x ‘see! Yousif | Messenger X © AiScree...
+2025-01-17 21:52:15,236 - DEBUG - Raw OCR Output: ¥ lessee. a x ‘see! Yousif | Messenger X © AiScreensharing withOCR © X_~-=_ Random Trivia Generator X | 2 Whats the ‘touch’ command © X + - o x
+€ er 9/@:
+a 1131 |C. 4) Eglo 900022-LED R... [J OBI barkécs- és web... INTERdecohu Inter... [9 AC (5) Unity Graphic Freel. (1) Football Steams.
+G us Aseel Yousit F i
+Jan 5, 2025, 9:40 PM Aseel Yousif
+u & ‘You: What is a Kissing gourami?- 1m. Hello
+Q
+Samu Székely ea8kM Search
+You: Es nem tudom miert xd-32m .
+@ eee >
+Patrik Romén
+—. Kar-6h 8:35PM
+F9 1 Customize chat >
+ae 5
+fe rte _ an
+" Lf - ea
+et eee |
+Liszié Vajda
+p ‘You: Nincs mit-20h
+Nindor os (Gee mem corms corner te tomere onsen
+nem figyeltem elege-22h | Acrenatine.
+i tmnt et
+° Marcell sent a GIF.-23h
+933PM
+Jocé Tassé
+Yu Bui nem vogyok x14 e (orta)
+i= Horvath, Viktor, Lészié Bendegiz o51PM
+No Uiszid Bendeguz: Jolvan raer- 1d
+4 Baratokst Sent
+es Je Méck voted for “3,9@" in the poll-1d
+o ogega ®
+.* Gabor Mandzék
+a) zes2
+n BE sears Zweeormtzorxs AG nm 4 anos ae
+
+2025-01-17 21:52:15,236 - DEBUG - Cleaned OCR Output: lessee. a x see! Yousif Messenger X AiScreensharing withOCR X_-_ Random Trivia Generator X 2 Whats the touch command X - o x er 9: a 1131 C. 4) Eglo 900022-LED R... J OBI barkécs- és web... INTERdecohu Inter... 9 AC (5) Unity Graphic Freel. (1) Football Steams. G us Aseel Yousit F i Jan 5, 2025, 9:40 PM Aseel Yousif u You: What is a Kissing gourami?- 1m. Hello Q Samu Székely ea8kM Search You: Es nem tudom miert xd-32m . eee Patrik Romén . Kar-6h 8:35PM F9 1 Customize chat ae 5 fe rte _ an " Lf - ea et eee Liszié Vajda p You: Nincs mit-20h Nindor os (Gee mem corms corner te tomere onsen nem figyeltem elege-22h Acrenatine. i tmnt et Marcell sent a GIF.-23h 933PM Jocé Tassé Yu Bui nem vogyok x14 e (orta) i Horvath, Viktor, Lészié Bendegiz o51PM No Uiszid Bendeguz: Jolvan raer- 1d 4 Baratokst Sent es Je Méck voted for 3,9" in the poll-1d o ogega . Gabor Mandzék a) zes2 n BE sears Zweeormtzorxs AG nm 4 anos ae
+2025-01-17 21:52:16,003 - DEBUG - connect_tcp.started host='api.cohere.com' port=443 local_address=None timeout=300 socket_options=None
+2025-01-17 21:52:16,114 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000262D8B1E900>
+2025-01-17 21:52:16,114 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x00000262D8B112E0> server_hostname='api.cohere.com' timeout=300
+2025-01-17 21:52:16,143 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000262D8B48690>
+2025-01-17 21:52:16,144 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-01-17 21:52:16,144 - DEBUG - send_request_headers.complete
+2025-01-17 21:52:16,144 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-01-17 21:52:16,144 - DEBUG - send_request_body.complete
+2025-01-17 21:52:16,144 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-01-17 21:52:18,780 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'access-control-expose-headers', b'X-Debug-Trace-ID'), (b'cache-control', b'no-cache, no-store, no-transform, must-revalidate, private, max-age=0'), (b'content-type', b'application/json'), (b'expires', b'Thu, 01 Jan 1970 00:00:00 UTC'), (b'num_chars', b'1057'), (b'num_tokens', b'404'), (b'pragma', b'no-cache'), (b'vary', b'Origin'), (b'x-accel-expires', b'0'), (b'x-api-warning', b'unknown field: parameter model is not a valid field'), (b'x-debug-trace-id', b'42a70d1ecf467e39295385d5171a76b6'), (b'x-endpoint-monthly-call-limit', b'1000'), (b'x-trial-endpoint-call-limit', b'40'), (b'x-trial-endpoint-call-remaining', b'39'), (b'date', b'Fri, 17 Jan 2025 20:52:19 GMT'), (b'Content-Length', b'1323'), (b'x-envoy-upstream-service-time', b'2474'), (b'server', b'envoy'), (b'Via', b'1.1 google'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000')])
+2025-01-17 21:52:18,780 - INFO - HTTP Request: POST https://api.cohere.com/v1/generate "HTTP/1.1 200 OK"
+2025-01-17 21:52:18,781 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-01-17 21:52:18,781 - DEBUG - receive_response_body.complete
+2025-01-17 21:52:18,781 - DEBUG - response_closed.started
+2025-01-17 21:52:18,781 - DEBUG - response_closed.complete
