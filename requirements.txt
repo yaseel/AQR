@@ -1,0 +1,9 @@
+tkinter  # Comes pre-installed with Python, but mention for completeness
+pytesseract
+pyautogui
+requests
+cohere
+opencv-python-headless
+numpy
+pillow
+cryptography

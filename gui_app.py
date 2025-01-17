@@ -5,75 +5,169 @@ import pyautogui
 import requests
 import cohere
 import os
+import sys
 import time
 import re
-from spellchecker import SpellChecker
 import cv2
 import numpy as np
 from PIL import ImageGrab, Image
+from cryptography.fernet import Fernet
+
+class PopupStatus:
+    def __init__(self, root):
+        self.popup = tk.Toplevel(root)
+        self.popup.title("Processing...")
+        self.popup.geometry("250x100+50+50")  # Positioned at the corner
+        self.popup.resizable(False, False)
+        self.popup.attributes("-topmost", True)  # Keep popup on top
+
+        self.label = ttk.Label(self.popup, text="Initializing...", wraplength=200, anchor="center", justify="center")
+        self.label.pack(pady=10)
+
+        self.close_button = ttk.Button(self.popup, text="Close", command=self.close)
+        self.close_button.pack(pady=5)
+
+        # Track if the popup should auto-close
+        self.is_done = False
+
+    def update_status(self, message, is_done=False):
+        """
+        Update the status message in the popup.
+        """
+        self.label.config(text=message)
+        self.popup.update()  # Ensure the popup updates immediately
+
+        if is_done:
+            self.is_done = True
+            self.auto_close()
+
+    def auto_close(self):
+        """
+        Auto-close the popup after 10 seconds.
+        """
+        self.popup.after(10000, self.close)
+
+    def close(self):
+        """
+        Close the popup.
+        """
+        self.popup.destroy()
+
+last_question_global = None  # Tracks the last question detected
 
 
-# OCR-related functions
+CIPHER_KEY = b'JjcdhA2jUryMy5VnKm-ZQ2oRhEVeVrU4NjIfdW9_iOQ='
+ENCRYPTED_API_KEY = b'gAAAAABniqv_YcQiDjUhYJQwxY54_XDSZZBBDrAc9QQ2N_yS3Fp45TVToGH4onYA24AejkR2CbPcL4-e9U4AypVOko7-4assfik71UPcJyZ_RmAQcUXkH8H094OVUU5uyO_9--58eBvV'
+
+def decrypt_api_key():
+    cipher = Fernet(CIPHER_KEY)
+    return cipher.decrypt(ENCRYPTED_API_KEY).decode("utf-8")
+
+if getattr(sys, 'frozen', False):  # Running as a PyInstaller bundle
+    base_path = sys._MEIPASS
+    tesseract_path = os.path.join(base_path, "tesseract.exe")
+else:  # Running in a normal Python environment
+    tesseract_path = "C:/Program Files/Tesseract-OCR/tesseract.exe"  # Adjust path as needed
+
+pytesseract.pytesseract.tesseract_cmd = tesseract_path
+
+# EasyOCR (Optional)
+try:
+    import easyocr
+    EASY_OCR_ENABLED = True
+except ImportError:
+    EASY_OCR_ENABLED = False
+    print("EasyOCR not installed. Defaulting to Tesseract.")
+
 def capture_screen(lang="eng"):
     try:
-        # Capture the screen
         screen = ImageGrab.grab()
         screen_np = np.array(screen)
 
         # Convert to grayscale
         gray = cv2.cvtColor(screen_np, cv2.COLOR_BGR2GRAY)
 
-        # Apply adaptive thresholding
-        thresh = cv2.adaptiveThreshold(
-            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
-        )
+        # Apply morphological transformations for better segmentation
+        kernel = np.ones((2, 2), np.uint8)
+        gray = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
 
-        # Convert back to PIL Image for pytesseract
-        processed_image = Image.fromarray(thresh)
+        # Use CLAHE for better contrast
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(gray)
 
-        # Save processed image for debugging
-        processed_image.save("processed_screenshot.png")
-        print("Debug: Processed screenshot saved as 'processed_screenshot.png'.")
+        # Save debug image
+        debug_image = Image.fromarray(enhanced)
+        debug_image.save("enhanced_debug.png")
 
-        # Run OCR
-        text = pytesseract.image_to_string(processed_image, lang=lang)
+        # OCR with Tesseract
+        custom_config = r'--oem 3 --psm 6'
+        text = pytesseract.image_to_string(debug_image, lang=lang, config=custom_config)
         return text
     except Exception as e:
         print(f"Error capturing screen: {e}")
         return None
 
 
-# Clean OCR text
-def clean_ocr_output(text):
-    print(f"Debug: Raw OCR Output: {text}")  # Debugging: Raw OCR output
-    cleaned_text = re.sub(r"[^a-zA-Z0-9\s\?\.,]", "", text)
-    corrections = {
-        "thie": "third",
-        "wes": "was",
-        "presitient": "president",
-        "Ge": "the",
-        "united sketas": "United States",
-    }
-    for error, correction in corrections.items():
-        cleaned_text = cleaned_text.replace(error, correction)
+# EasyOCR implementation (Optional)
+def capture_screen_easyocr():
+    if not EASY_OCR_ENABLED:
+        print("EasyOCR is not installed.")
+        return None
 
-    print(f"Debug: Cleaned OCR Output: {cleaned_text}")  # Debugging: Cleaned OCR output
-    return cleaned_text.strip()
+    try:
+        reader = easyocr.Reader(['en'])  # Initialize EasyOCR
+        screen = ImageGrab.grab()
+        screen.save("raw_screenshot.png")
+        print("Debug: Raw screenshot saved as 'raw_screenshot.png'.")
+
+        # Use EasyOCR for text detection
+        result = reader.readtext(np.array(screen))
+        detected_text = " ".join([text[1] for text in result])
+        return detected_text
+    except Exception as e:
+        print(f"Error with EasyOCR: {e}")
+        return None
+
+def clean_ocr_output(text):
+    """
+    Clean OCR output dynamically for all languages by removing noise and irrelevant lines.
+    """
+    print(f"Debug: Raw OCR Output: {text}")
+
+    # Remove non-printable characters and excessive whitespace
+    cleaned_text = re.sub(r"[^\w\s\?\.,:;!\"'()\-]", "", text)
+    cleaned_text = re.sub(r"\s+", " ", cleaned_text).strip()
+
+    # Extract meaningful lines (filter out short or irrelevant lines)
+    meaningful_lines = [
+        line.strip() for line in cleaned_text.splitlines()
+        if len(line.split()) > 2 or "?" in line
+    ]
+
+    # Rejoin meaningful lines
+    final_text = " ".join(meaningful_lines)
+
+    print(f"Debug: Cleaned OCR Output: {final_text}")
+    return final_text
+
 
 
 # Normalize text
 def normalize_text(text):
-    spell = SpellChecker()
-    words = text.split()
-    corrected_words = [spell.correction(word) if spell.correction(word) else word for word in words]
-    return " ".join(corrected_words)
+    # Perform basic cleanup and normalization
+    text = re.sub(r"\s+", " ", text).strip()  # Remove extra spaces
+    return text
+
 
 
 # Generate response using Cohere
 def generate_response(prompt):
     try:
-        api_key = os.getenv("COHERE_API_KEY")
+        # Decrypt the API key
+        api_key = decrypt_api_key()
         co = cohere.Client(api_key)
+
+        # Create the prompt
         instruction_prompt = (
             "Answer the following question clearly and concisely. "
             "Do not repeat the question.\n\n"
@@ -97,98 +191,92 @@ def clean_response(response, original_prompt):
     response = response.replace("Question:", "").replace("Answer:", "").strip()
     return response
 
-
-# Detect and focus on text box
-def detect_and_focus_text_box():
-    try:
-        screen = ImageGrab.grab()
-        gray_screen = screen.convert("L")
-        data = pytesseract.image_to_data(gray_screen, output_type=pytesseract.Output.DICT)
-        keywords = ["Type a message", "Write something", "Enter message"]
-        for i, text in enumerate(data["text"]):
-            if any(keyword.lower() in text.lower() for keyword in keywords):
-                x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
-                print(f"Debug: Detected text box at x={x}, y={y}, w={w}, h={h}.")
-                pyautogui.moveTo(x + w // 2, y + h // 2, duration=0.5)
-                pyautogui.click()
-                return True
-        fallback_click()
-        return False
-    except Exception as e:
-        print(f"Error detecting text box: {e}")
-        return False
-
-
-# Fallback for text box focus
-def fallback_click():
-    print("Debug: Using fallback click.")
-    pyautogui.moveTo(500, 800, duration=0.5)
-    pyautogui.click()
-
-
-# Automate typing
+# Automate typing directly without cursor positioning
 def type_response(response):
     try:
-        if not detect_and_focus_text_box():
-            fallback_click()
         print(f"Debug: Typing response: {response}")  # Debugging: Typing response
-        pyautogui.typewrite(response, interval=0.1)
+        pyautogui.typewrite(response, interval=0.01)  # Assume user has clicked the input field
         pyautogui.press("enter")
     except Exception as e:
         print(f"Error typing response: {e}")
 
 
-# Process chat without interruptions
-def process_chat():
-    text = capture_screen(lang="eng")
+
+def process_chat(root):
+    global last_question_global
+
+    popup = PopupStatus(root)  # Initialize the popup
+    popup.update_status("Waiting for user to click on text box...")
+
+    # Simulated user action to click the text box
+    time.sleep(1)  # Replace with an event-based system later
+    popup.update_status("Processing OCR...")
+
+    # Use EasyOCR if enabled, otherwise fallback to Tesseract
+    if EASY_OCR_ENABLED:
+        text = capture_screen_easyocr()
+    else:
+        text = capture_screen(lang="eng")
+
     if not text:
-        print("Debug: No text detected on the screen.")
+        popup.update_status("Failed: No text detected.")
         return
 
-    # Log raw OCR output
     print("Debug: OCR Output (Raw):", text)
 
-    # Clean and normalize the OCR text
+    popup.update_status("Cleaning OCR output...")
     text = clean_ocr_output(text)
     print("Debug: OCR Output (Cleaned):", text)
 
-    # Detect the last question
+    popup.update_status("Detecting question...")
     last_question = None
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     for line in reversed(lines):
-        if "?" in line:
+        if "?" in line:  # Detect questions
             last_question = line
             break
 
     if not last_question:
-        print("Debug: No question detected.")
+        popup.update_status("Failed: No question detected.")
         return
 
-    print(f"Debug: Detected question (Before Normalization): {last_question}")
-    last_question = normalize_text(last_question)
-    print(f"Debug: Detected question (After Normalization): {last_question}")
+    if last_question == last_question_global:
+        popup.update_status("Skipped: No new question.")
+        return
 
-    # Generate AI response
+    print(f"Debug: Detected question: {last_question}")
+    last_question_global = last_question  # Update the global state
+
+    popup.update_status("Generating response...")
     ai_response = generate_response(last_question)
 
-    # Clean the AI response
+    if "Failed" in ai_response:
+        popup.update_status("Failed: AI response generation failed.")
+        return
+
     ai_response = clean_response(ai_response, last_question)
     print(f"Debug: AI Response: {ai_response}")
 
-    # Type the AI response automatically
+    popup.update_status("Typing response...")
     type_response(ai_response)
+
+    popup.update_status("Done!", is_done=True)
+
+
 
 
 # GUI
 def main():
+    global root  # Ensure `root` is globally accessible if needed
     root = tk.Tk()
     root.title("LOOK SMART AI")
     root.geometry("300x200")
 
-    ttk.Button(root, text="Process Chat", command=process_chat).pack(pady=10)
+    ttk.Button(root, text="Process Chat", command=lambda: process_chat(root)).pack(pady=10)
     ttk.Button(root, text="Exit", command=root.quit).pack(pady=10)
 
     root.mainloop()
+
 
 
 if __name__ == "__main__":
