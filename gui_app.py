@@ -4,7 +4,10 @@ import pytesseract
 import pyautogui
 import threading
 import requests
+import cohere
 import time
+import re
+from spellchecker import SpellChecker
 import cv2
 import numpy as np
 from PIL import ImageGrab, Image
@@ -17,28 +20,89 @@ def detect_language(text):
 
 def capture_screen(lang="eng"):
     try:
-        screen = ImageGrab.grab()
-        gray = cv2.cvtColor(np.array(screen), cv2.COLOR_BGR2GRAY)
-        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        # Capture the screen
+        screen = ImageGrab.grab()  # Take a screenshot
+        screen_np = np.array(screen)  # Convert to a NumPy array
+
+        # Convert to grayscale
+        gray = cv2.cvtColor(screen_np, cv2.COLOR_BGR2GRAY)
+
+        # Apply adaptive thresholding for dynamic contrast enhancement
+        thresh = cv2.adaptiveThreshold(
+            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        )
+
+        # Convert back to PIL Image for pytesseract
         processed_image = Image.fromarray(thresh)
+
+        # Save processed image for debugging
         processed_image.save("processed_screenshot.png")
+        print("Debug Image Saved: processed_screenshot.png")
+
+        # Run OCR on the processed image
         text = pytesseract.image_to_string(processed_image, lang=lang)
         return text
     except Exception as e:
         messagebox.showerror("Error", f"Failed to capture screen: {e}")
         return None
 
+
+
 def generate_response(prompt):
-    api_url = "https://api-inference.huggingface.co/models/google/flan-t5-large"
-    headers = {"Authorization": f"Bearer YOUR_API_KEY"}
-    for _ in range(3):
-        try:
-            response = requests.post(api_url, headers=headers, json={"inputs": prompt})
-            response.raise_for_status()
-            return response.json()[0]["generated_text"]
-        except requests.exceptions.RequestException:
-            time.sleep(5)
-    return "Failed to get a response."
+    try:
+        co = cohere.Client("REDACTED")  # Replace with your actual API key
+
+        # Update the prompt to include clear instructions
+        instruction_prompt = (
+            "Answer the following question clearly and concisely. "
+            "Do not repeat the question.\n\n"
+            f"Question: {prompt}\n"
+            "Answer:"
+        )
+
+        response = co.generate(
+            model="command-xlarge-nightly",
+            prompt=instruction_prompt,
+            max_tokens=100,  # Adjust as needed
+        )
+        return response.generations[0].text.strip()
+    except Exception as e:
+        print(f"Error generating response: {e}")
+        return "Failed to get a response."
+
+
+def clean_response(response, original_prompt):
+    # Remove parts of the response that repeat the original prompt
+    response = response.replace(original_prompt, "").strip()
+
+    # Optionally, strip common prefixes like "Question:" or "Answer:"
+    response = response.replace("Question:", "").replace("Answer:", "").strip()
+
+    return response
+
+def clean_ocr_output(text):
+    # Remove non-alphanumeric characters except for spaces and punctuation
+    cleaned_text = re.sub(r"[^a-zA-Z0-9\s\?\.,]", "", text)
+
+    # Replace common OCR errors with corrections
+    corrections = {
+        "thie": "third",
+        "wes": "was",
+        "presitient": "president",
+        "Ge": "the",
+        "united sketas": "United States"
+    }
+    for error, correction in corrections.items():
+        cleaned_text = cleaned_text.replace(error, correction)
+
+    return cleaned_text.strip()
+
+def normalize_text(text):
+    spell = SpellChecker()
+    words = text.split()
+    corrected_words = [spell.correction(word) if spell.correction(word) else word for word in words]
+    return " ".join(corrected_words)
+
 
 def detect_and_focus_text_box():
     try:
@@ -67,17 +131,41 @@ def type_response(response):
         messagebox.showerror("Error", f"Failed to type response: {e}")
 
 def process_chat():
-    print("Process Chat button clicked!")
     text = capture_screen(lang="eng")
     if not text:
         messagebox.showerror("Error", "No text detected on the screen.")
         return
-    print("OCR Output:", text)
-    last_question = next((line for line in reversed(text.splitlines()) if "?" in line), None)
+
+    print("OCR Output (Raw):", text)  # Debugging: Raw OCR output
+
+    # Clean and normalize the OCR text
+    text = clean_ocr_output(text)
+    print("OCR Output (Cleaned):", text)  # Debugging: Cleaned OCR output
+
+    # Detect the last question from the OCR output
+    last_question = None
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    for line in reversed(lines):
+        if "?" in line:  # Detect questions
+            last_question = line
+            break
+
     if not last_question:
         messagebox.showinfo("Info", "No question detected on the screen.")
         return
+
+    # Normalize the detected question
+    last_question = normalize_text(last_question)
+
+    print(f"Detected question: {last_question}")  # Debugging
+
+    # Generate AI response
     ai_response = generate_response(last_question)
+
+    # Clean the AI response to remove any repeated question
+    ai_response = clean_response(ai_response, last_question)
+
+    # Show the response
     if ai_response:
         messagebox.showinfo("AI Response", ai_response)
         if messagebox.askyesno("Type Response", "Do you want to type this response automatically?"):
